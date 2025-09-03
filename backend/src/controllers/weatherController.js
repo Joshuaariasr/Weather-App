@@ -113,10 +113,52 @@ const mockForecastData = {
   }
 };
 
+// Säker funktion för att validera stadnamn
+const validateCityInput = (city) => {
+  if (!city || typeof city !== 'string') {
+    throw new Error('Ogiltigt stadsnamn');
+  }
+  
+  const cleanCity = city.trim();
+  if (cleanCity.length === 0 || cleanCity.length > 50) {
+    throw new Error('Stadsnamn måste vara mellan 1-50 tecken');
+  }
+  
+  // Kontrollera att det bara innehåller tillåtna tecken
+  if (!/^[a-zA-ZåäöÅÄÖ\s\-']+$/.test(cleanCity)) {
+    throw new Error('Stadsnamn får endast innehålla bokstäver, mellanslag, bindestreck och apostrofer');
+  }
+  
+  return cleanCity;
+};
+
+// Säker funktion för att validera koordinater
+const validateCoordinates = (lat, lon) => {
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(lon);
+  
+  if (isNaN(latitude) || isNaN(longitude)) {
+    throw new Error('Ogiltiga koordinater');
+  }
+  
+  if (latitude < -90 || latitude > 90) {
+    throw new Error('Latitud måste vara mellan -90 och 90');
+  }
+  
+  if (longitude < -180 || longitude > 180) {
+    throw new Error('Longitud måste vara mellan -180 och 180');
+  }
+  
+  return { lat: latitude, lon: longitude };
+};
+
 const weatherController = {
   async getCurrentWeather(req, res) {
     try {
-      const { city } = req.params;
+      const city = validateCityInput(req.params.city);
+      
+      // Logga säkert (utan känslig data)
+      console.log(`Weather request for city: ${city}`);
       
       // Använd mock data om API-nyckeln är demo
       if (WEATHER_API_KEY === 'demo_key_for_testing') {
@@ -124,19 +166,33 @@ const weatherController = {
         return res.json(mockData);
       }
 
-      // Annars använd riktig API
+      // Annars använd riktig API med timeout
       const response = await axios.get(`${WEATHER_BASE_URL}/weather`, {
         params: {
           q: city,
           appid: WEATHER_API_KEY,
           units: 'metric',
           lang: 'sv'
-        }
+        },
+        timeout: 5000 // 5 sekunder timeout
       });
       
       res.json(response.data);
     } catch (error) {
       console.error('Weather API Error:', error.message);
+      
+      // Säker felhantering - inte läcka känslig information
+      if (error.code === 'ECONNABORTED') {
+        return res.status(408).json({ 
+          error: 'Timeout - väderdata kunde inte hämtas i tid'
+        });
+      }
+      
+      if (error.response?.status === 404) {
+        return res.status(404).json({ 
+          error: `Stad "${req.params.city}" hittades inte`
+        });
+      }
       
       // Fallback till mock data vid fel
       const mockData = mockWeatherData[req.params.city] || mockWeatherData['Stockholm'];
@@ -146,7 +202,9 @@ const weatherController = {
 
   async getForecast(req, res) {
     try {
-      const { city } = req.params;
+      const city = validateCityInput(req.params.city);
+      
+      console.log(`Forecast request for city: ${city}`);
       
       // Använd mock data om API-nyckeln är demo
       if (WEATHER_API_KEY === 'demo_key_for_testing') {
@@ -161,12 +219,19 @@ const weatherController = {
           appid: WEATHER_API_KEY,
           units: 'metric',
           lang: 'sv'
-        }
+        },
+        timeout: 5000
       });
       
       res.json(response.data.list);
     } catch (error) {
       console.error('Forecast API Error:', error.message);
+      
+      if (error.code === 'ECONNABORTED') {
+        return res.status(408).json({ 
+          error: 'Timeout - prognosdata kunde inte hämtas i tid'
+        });
+      }
       
       // Fallback till mock data vid fel
       const mockData = mockForecastData[req.params.city] || mockForecastData['Stockholm'];
@@ -176,14 +241,10 @@ const weatherController = {
 
   async getWeatherByCoordinates(req, res) {
     try {
-      const { lat, lon } = req.query;
+      const { lat, lon } = validateCoordinates(req.query.lat, req.query.lon);
       
-      if (!lat || !lon) {
-        return res.status(400).json({ 
-          message: 'Latitud och longitud krävs' 
-        });
-      }
-
+      console.log(`Weather request for coordinates: ${lat}, ${lon}`);
+      
       // Använd mock data om API-nyckeln är demo
       if (WEATHER_API_KEY === 'demo_key_for_testing') {
         return res.json(mockWeatherData['Stockholm']);
@@ -197,12 +258,19 @@ const weatherController = {
           appid: WEATHER_API_KEY,
           units: 'metric',
           lang: 'sv'
-        }
+        },
+        timeout: 5000
       });
       
       res.json(response.data);
     } catch (error) {
       console.error('Coordinates Weather API Error:', error.message);
+      
+      if (error.code === 'ECONNABORTED') {
+        return res.status(408).json({ 
+          error: 'Timeout - väderdata kunde inte hämtas i tid'
+        });
+      }
       
       // Fallback till mock data vid fel
       res.json(mockWeatherData['Stockholm']);
