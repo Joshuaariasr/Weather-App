@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { weatherService } from '../services/weatherService';
 
 const WeatherContext = createContext();
@@ -42,7 +42,12 @@ const weatherReducer = (state, action) => {
 export const WeatherProvider = ({ children }) => {
   const [state, dispatch] = useReducer(weatherReducer, initialState);
 
-  const getCurrentWeather = async (city) => {
+  const getCurrentWeather = useCallback(async (city) => {
+    // Förhindra dubletter av samma stad
+    if (state.currentWeather?.name === city) {
+      return;
+    }
+
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const weather = await weatherService.getCurrentWeather(city);
@@ -51,24 +56,24 @@ export const WeatherProvider = ({ children }) => {
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     }
-  };
+  }, [state.currentWeather?.name]);
 
-  const getForecast = async (city) => {
+  const getForecast = useCallback(async (city) => {
     try {
       const forecast = await weatherService.getForecast(city);
       dispatch({ type: 'SET_FORECAST', payload: forecast });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     }
-  };
+  }, []);
 
-  const addFavorite = (city) => {
+  const addFavorite = useCallback((city) => {
     dispatch({ type: 'ADD_FAVORITE', payload: city });
-  };
+  }, []);
 
-  const removeFavorite = (city) => {
+  const removeFavorite = useCallback((city) => {
     dispatch({ type: 'REMOVE_FAVORITE', payload: city });
-  };
+  }, []);
 
   const value = {
     ...state,
