@@ -3,7 +3,7 @@ const axios = require('axios');
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY || 'demo_key_for_testing';
 const WEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
-// Mock data för demo
+// Mock data för demo - Utökad med fler städer
 const mockWeatherData = {
   'Stockholm': {
     coord: { lon: 18.0649, lat: 59.3326 },
@@ -88,6 +88,34 @@ const mockWeatherData = {
     id: 2692969,
     name: 'Malmö',
     cod: 200
+  },
+  'Köpenhamn': {
+    coord: { lon: 12.5655, lat: 55.6759 },
+    weather: [{ id: 802, main: 'Clouds', description: 'molnigt', icon: '03d' }],
+    base: 'stations',
+    main: {
+      temp: 12,
+      feels_like: 11,
+      temp_min: 9,
+      temp_max: 15,
+      pressure: 1012,
+      humidity: 75
+    },
+    visibility: 9000,
+    wind: { speed: 3.8, deg: 200 },
+    clouds: { all: 40 },
+    dt: Math.floor(Date.now() / 1000),
+    sys: {
+      type: 1,
+      id: 1788,
+      country: 'DK',
+      sunrise: Math.floor(Date.now() / 1000) - 3600,
+      sunset: Math.floor(Date.now() / 1000) + 3600
+    },
+    timezone: 7200,
+    id: 2618425,
+    name: 'Köpenhamn',
+    cod: 200
   }
 };
 
@@ -107,6 +135,63 @@ const mockForecastData = {
       wind: { speed: 3.5, deg: 230 },
       visibility: 10000,
       pop: 0.1,
+      sys: { pod: 'd' },
+      dt_txt: new Date(Date.now() + (i * 86400 * 1000)).toISOString()
+    }))
+  },
+  'Göteborg': {
+    list: Array.from({ length: 5 }, (_, i) => ({
+      dt: Math.floor(Date.now() / 1000) + (i * 86400),
+      main: {
+        temp: 13 + Math.random() * 4,
+        temp_min: 10 + Math.random() * 3,
+        temp_max: 16 + Math.random() * 3,
+        pressure: 1015,
+        humidity: 70
+      },
+      weather: [{ id: 801, main: 'Clouds', description: 'några moln', icon: '02d' }],
+      clouds: { all: 20 },
+      wind: { speed: 4.2, deg: 250 },
+      visibility: 10000,
+      pop: 0.2,
+      sys: { pod: 'd' },
+      dt_txt: new Date(Date.now() + (i * 86400 * 1000)).toISOString()
+    }))
+  },
+  'Malmö': {
+    list: Array.from({ length: 5 }, (_, i) => ({
+      dt: Math.floor(Date.now() / 1000) + (i * 86400),
+      main: {
+        temp: 11 + Math.random() * 3,
+        temp_min: 9 + Math.random() * 2,
+        temp_max: 14 + Math.random() * 3,
+        pressure: 1010,
+        humidity: 85
+      },
+      weather: [{ id: 500, main: 'Rain', description: 'lätt regn', icon: '10d' }],
+      clouds: { all: 75 },
+      wind: { speed: 5.1, deg: 180 },
+      visibility: 8000,
+      pop: 0.6,
+      sys: { pod: 'd' },
+      dt_txt: new Date(Date.now() + (i * 86400 * 1000)).toISOString()
+    }))
+  },
+  'Köpenhamn': {
+    list: Array.from({ length: 5 }, (_, i) => ({
+      dt: Math.floor(Date.now() / 1000) + (i * 86400),
+      main: {
+        temp: 12 + Math.random() * 4,
+        temp_min: 9 + Math.random() * 3,
+        temp_max: 15 + Math.random() * 3,
+        pressure: 1012,
+        humidity: 75
+      },
+      weather: [{ id: 802, main: 'Clouds', description: 'molnigt', icon: '03d' }],
+      clouds: { all: 40 },
+      wind: { speed: 3.8, deg: 200 },
+      visibility: 9000,
+      pop: 0.3,
       sys: { pod: 'd' },
       dt_txt: new Date(Date.now() + (i * 86400 * 1000)).toISOString()
     }))
@@ -274,6 +359,22 @@ const weatherController = {
       
       // Fallback till mock data vid fel
       res.json(mockWeatherData['Stockholm']);
+    }
+  },
+
+  // Ny endpoint för att hämta alla tillgängliga städer
+  async getAvailableCities(req, res) {
+    try {
+      const cities = Object.keys(mockWeatherData).map(cityName => ({
+        name: cityName,
+        country: mockWeatherData[cityName].sys.country,
+        coordinates: mockWeatherData[cityName].coord
+      }));
+      
+      res.json({ cities });
+    } catch (error) {
+      console.error('Available Cities Error:', error.message);
+      res.status(500).json({ error: 'Kunde inte hämta lista över städer' });
     }
   }
 };

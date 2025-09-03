@@ -3,8 +3,7 @@ import {
   validateCityName, 
   validateCoordinates, 
   getSecureHeaders, 
-  validateApiResponse,
-  searchRateLimiter 
+  validateApiResponse
 } from '../utils/validation';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002/api';
@@ -61,11 +60,6 @@ const weatherService = {
         throw new Error(validation.errors.join(', '));
       }
 
-      // Check rate limit
-      if (!searchRateLimiter.isAllowed('weather-search')) {
-        throw new Error('För många sökningar. Vänta en stund innan du söker igen.');
-      }
-
       const response = await apiClient.get(`/weather/current/${encodeURIComponent(validation.sanitized)}`);
       return response;
     } catch (error) {
@@ -82,11 +76,6 @@ const weatherService = {
         throw new Error(validation.errors.join(', '));
       }
 
-      // Check rate limit
-      if (!searchRateLimiter.isAllowed('forecast-search')) {
-        throw new Error('För många prognosförfrågningar. Vänta en stund innan du söker igen.');
-      }
-
       const response = await apiClient.get(`/weather/forecast/${encodeURIComponent(validation.sanitized)}`);
       return response;
     } catch (error) {
@@ -101,11 +90,6 @@ const weatherService = {
       const validation = validateCoordinates(lat, lon);
       if (!validation.isValid) {
         throw new Error(validation.errors.join(', '));
-      }
-
-      // Check rate limit
-      if (!searchRateLimiter.isAllowed('coords-search')) {
-        throw new Error('För många koordinatförfrågningar. Vänta en stund innan du söker igen.');
       }
 
       const response = await apiClient.get('/weather/coordinates', {

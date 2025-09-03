@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, IconButton, Chip, useMediaQuery, useTheme } from '@mui/material';
+import { Card, CardContent, Typography, Box, IconButton, Chip } from '@mui/material';
 import { Favorite, FavoriteBorder, LocationOn } from '@mui/icons-material';
 import { useWeather } from '../context/WeatherContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,9 +7,17 @@ import { useNavigate } from 'react-router-dom';
 const WeatherCard = ({ weather, isFavorite = false, showLocation = true }) => {
   const { addFavorite, removeFavorite } = useWeather();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Säkerhetskontroll för weather-objektet
+  if (!weather || !weather.name) {
+    return (
+      <Card elevation={2} sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary">
+          Ingen väderdata tillgänglig
+        </Typography>
+      </Card>
+    );
+  }
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
@@ -36,129 +44,133 @@ const WeatherCard = ({ weather, isFavorite = false, showLocation = true }) => {
     return '#ef5350'; // Röd för varmt
   };
 
+  const formatTemperature = (temp) => {
+    return Math.round(temp);
+  };
+
+  const formatWindSpeed = (speed) => {
+    return Math.round(speed * 3.6); // Konvertera m/s till km/h
+  };
+
+  const getWindDirection = (deg) => {
+    const directions = ['N', 'NO', 'O', 'SO', 'S', 'SV', 'V', 'NV'];
+    const index = Math.round(deg / 45) % 8;
+    return directions[index];
+  };
+
   return (
     <Card 
+      elevation={2} 
       sx={{ 
-        cursor: 'pointer', 
-        transition: 'all 0.3s ease',
-        '&:hover': { 
-          transform: isMobile ? 'none' : 'translateY(-4px)',
-          boxShadow: isMobile ? 2 : 4
-        },
-        mb: 2,
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        border: '1px solid rgba(255,255,255,0.2)',
-        borderRadius: 2
+        cursor: 'pointer',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: 4
+        }
       }}
       onClick={handleCardClick}
     >
-      <CardContent className="weather-card-content">
-        <Box 
-          display="flex" 
-          justifyContent="space-between" 
-          alignItems="flex-start"
-          flexDirection={isMobile ? 'column' : 'row'}
-          className="weather-card-main"
-        >
-          <Box flex={1} textAlign={isMobile ? 'center' : 'left'}>
-            {showLocation && (
-              <Box 
-                display="flex" 
-                alignItems="center" 
-                mb={1}
-                justifyContent={isMobile ? 'center' : 'flex-start'}
-              >
-                <LocationOn sx={{ mr: 0.5, fontSize: 16, color: 'text.secondary' }} />
-                <Typography variant="body2" color="text.secondary">
-                  {weather.name}, {weather.sys?.country}
-                </Typography>
-              </Box>
-            )}
-            
-            <Typography 
-              variant={isMobile ? "h6" : "h6"} 
-              component="div" 
-              sx={{ mb: 1 }}
-            >
-              {weather.weather[0].description.charAt(0).toUpperCase() + weather.weather[0].description.slice(1)}
+      <CardContent sx={{ p: 3 }}>
+        {/* Header med stad och favorit-knapp */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {showLocation && <LocationOn sx={{ mr: 1, color: 'primary.main' }} />}
+            <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+              {weather.name}
             </Typography>
-            
+          </Box>
+          <IconButton 
+            onClick={handleFavoriteClick}
+            sx={{ color: isFavorite ? 'error.main' : 'grey.400' }}
+          >
+            {isFavorite ? <Favorite /> : <FavoriteBorder />}
+          </IconButton>
+        </Box>
+
+        {/* Huvudväder */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ flex: 1 }}>
             <Typography 
-              variant={isMobile ? "h3" : "h3"} 
+              variant="h2" 
               component="div" 
-              className="temperature-display"
               sx={{ 
                 fontWeight: 'bold',
-                color: getTemperatureColor(Math.round(weather.main.temp)),
-                fontSize: isMobile ? '2.5rem' : '3rem'
+                color: getTemperatureColor(weather.main?.temp || 0)
               }}
             >
-              {Math.round(weather.main.temp)}°C
+              {formatTemperature(weather.main?.temp || 0)}°
+            </Typography>
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+              {weather.weather?.[0]?.description || 'Okänt väder'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Känns som {formatTemperature(weather.main?.feels_like || 0)}°
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            {weather.weather?.[0]?.icon && (
+              <img 
+                src={getWeatherIcon(weather.weather[0].icon)} 
+                alt={weather.weather[0].description}
+                style={{ width: 80, height: 80 }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        {/* Väderdetaljer */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 2 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Min/Max
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {formatTemperature(weather.main?.temp_min || 0)}° / {formatTemperature(weather.main?.temp_max || 0)}°
             </Typography>
           </Box>
           
-          <Box 
-            display="flex" 
-            flexDirection="column" 
-            alignItems="center"
-            mt={isMobile ? 2 : 0}
-          >
-            <img 
-              src={getWeatherIcon(weather.weather[0].icon)} 
-              alt={weather.weather[0].description}
-              className="weather-icon-large"
-              style={{ 
-                width: isMobile ? 60 : 80, 
-                height: isMobile ? 60 : 80 
-              }}
-            />
-            <IconButton 
-              onClick={handleFavoriteClick} 
-              sx={{ mt: 1 }}
-              size={isMobile ? "medium" : "small"}
-            >
-              {isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
-            </IconButton>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Luftfuktighet
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {weather.main?.humidity || 0}%
+            </Typography>
+          </Box>
+          
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Vind
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {formatWindSpeed(weather.wind?.speed || 0)} km/h
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {getWindDirection(weather.wind?.deg || 0)}
+            </Typography>
+          </Box>
+          
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Tryck
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {weather.main?.pressure || 0} hPa
+            </Typography>
           </Box>
         </Box>
-        
-        <Box 
-          display="flex" 
-          justifyContent="space-between" 
-          mt={2} 
-          flexWrap="wrap" 
-          gap={1}
-          className="weather-chips"
-          flexDirection={isMobile ? 'column' : 'row'}
-        >
-          <Chip 
-            label={`Känns som ${Math.round(weather.main.feels_like)}°C`}
-            size="small"
-            variant="outlined"
-            sx={{ 
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center'
-            }}
-          />
-          <Chip 
-            label={`Luftfuktighet ${weather.main.humidity}%`}
-            size="small"
-            variant="outlined"
-            sx={{ 
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center'
-            }}
-          />
-          <Chip 
-            label={`Vind ${weather.wind?.speed || 0} m/s`}
-            size="small"
-            variant="outlined"
-            sx={{ 
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center'
-            }}
-          />
-        </Box>
+
+        {/* Sikt */}
+        {weather.visibility && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Chip 
+              label={`Sikt: ${Math.round(weather.visibility / 1000)} km`}
+              variant="outlined"
+              size="small"
+            />
+          </Box>
+        )}
       </CardContent>
     </Card>
   );

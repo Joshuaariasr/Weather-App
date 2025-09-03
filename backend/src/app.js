@@ -14,24 +14,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5002;
 
-// Security middleware (måste komma först)
-app.use(securityHeaders);
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"]
-    }
-  }
-}));
-
-// Rate limiting
-app.use(generalRateLimit);
-
-// CORS configuration - FIXED
+// CORS configuration - MÅSTE komma först
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] // Ersätt med din produktionsdomän
@@ -47,6 +30,23 @@ app.use(cors({
   ],
   exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']
 }));
+
+// Security middleware
+app.use(securityHeaders);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
+
+// Rate limiting
+app.use(generalRateLimit);
 
 // Logging
 app.use(morgan('combined'));
