@@ -8,8 +8,9 @@ import {
   CardContent,
   Alert,
   CircularProgress,
-  Chip,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWeather } from '../context/WeatherContext';
@@ -20,6 +21,9 @@ const WeatherDetailPage = () => {
   const navigate = useNavigate();
   const { currentWeather, forecast, loading, error, getCurrentWeather, getForecast, favorites } = useWeather();
   const [forecastLoading, setForecastLoading] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     if (city) {
@@ -47,7 +51,13 @@ const WeatherDetailPage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          py: isMobile ? 2 : 4,
+          px: isMobile ? 1 : 3
+        }}
+      >
         <Box display="flex" justifyContent="center">
           <CircularProgress />
         </Box>
@@ -57,7 +67,13 @@ const WeatherDetailPage = () => {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          py: isMobile ? 2 : 4,
+          px: isMobile ? 1 : 3
+        }}
+      >
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
@@ -70,7 +86,13 @@ const WeatherDetailPage = () => {
 
   if (!currentWeather) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          py: isMobile ? 2 : 4,
+          px: isMobile ? 1 : 3
+        }}
+      >
         <Typography variant="h6" color="text.secondary">
           Ingen väderdata tillgänglig
         </Typography>
@@ -79,17 +101,37 @@ const WeatherDetailPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+    <Container 
+      maxWidth="lg" 
+      sx={{ 
+        py: isMobile ? 2 : 4,
+        px: isMobile ? 1 : 3
+      }}
+    >
+      <Box mb={isMobile ? 2 : 4}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          component="h1" 
+          gutterBottom 
+          sx={{ 
+            fontWeight: 'bold',
+            fontSize: isMobile ? '1.5rem' : '2rem'
+          }}
+        >
           Väder för {currentWeather.name}
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
+        <Typography 
+          variant={isMobile ? "body1" : "subtitle1"} 
+          color="text.secondary"
+          sx={{
+            fontSize: isMobile ? '0.9rem' : '1rem'
+          }}
+        >
           {formatDate(currentWeather.dt)}
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={isMobile ? 1 : 3}>
         {/* Huvudväderkort */}
         <Grid item xs={12} md={8}>
           <WeatherCard 
@@ -102,54 +144,100 @@ const WeatherDetailPage = () => {
         {/* Detaljerad information */}
         <Grid item xs={12} md={4}>
           <Card elevation={3}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+            <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
+              <Typography 
+                variant={isMobile ? "h6" : "h6"} 
+                gutterBottom
+                sx={{
+                  fontSize: isMobile ? '1.1rem' : '1.25rem'
+                }}
+              >
                 Detaljerad information
               </Typography>
               <Divider sx={{ mb: 2 }} />
               
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box display="flex" flexDirection="column" gap={isMobile ? 1.5 : 2}>
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     Känns som:
                   </Typography>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="bold"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     {Math.round(currentWeather.main.feels_like)}°C
                   </Typography>
                 </Box>
                 
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     Luftfuktighet:
                   </Typography>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="bold"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     {currentWeather.main.humidity}%
                   </Typography>
                 </Box>
                 
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     Vindhastighet:
                   </Typography>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="bold"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     {currentWeather.wind?.speed || 0} m/s
                   </Typography>
                 </Box>
                 
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     Lufttryck:
                   </Typography>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="bold"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     {currentWeather.main.pressure} hPa
                   </Typography>
                 </Box>
                 
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     Sikt:
                   </Typography>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="bold"
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
                     {currentWeather.visibility ? (currentWeather.visibility / 1000).toFixed(1) : 'N/A'} km
                   </Typography>
                 </Box>
@@ -162,8 +250,14 @@ const WeatherDetailPage = () => {
         {forecast.length > 0 && (
           <Grid item xs={12}>
             <Card elevation={3}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+              <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
+                <Typography 
+                  variant={isMobile ? "h6" : "h6"} 
+                  gutterBottom
+                  sx={{
+                    fontSize: isMobile ? '1.1rem' : '1.25rem'
+                  }}
+                >
                   5-dagars prognos
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
@@ -173,12 +267,25 @@ const WeatherDetailPage = () => {
                     <CircularProgress />
                   </Box>
                 ) : (
-                  <Grid container spacing={2}>
+                  <Grid 
+                    container 
+                    spacing={isMobile ? 1 : 2}
+                    className="forecast-grid"
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile 
+                        ? 'repeat(2, 1fr)' 
+                        : isTablet 
+                        ? 'repeat(3, 1fr)' 
+                        : 'repeat(5, 1fr)',
+                      gap: isMobile ? 1 : 2
+                    }}
+                  >
                     {forecast.slice(0, 5).map((day, index) => (
-                      <Grid item xs={12} sm={6} md={2.4} key={index}>
+                      <Grid item key={index}>
                         <Box 
                           textAlign="center" 
-                          p={2}
+                          p={isMobile ? 1 : 2}
                           sx={{
                             border: '1px solid #e0e0e0',
                             borderRadius: 2,
@@ -187,22 +294,47 @@ const WeatherDetailPage = () => {
                             }
                           }}
                         >
-                          <Typography variant="subtitle2" fontWeight="bold">
+                          <Typography 
+                            variant="subtitle2" 
+                            fontWeight="bold"
+                            sx={{ 
+                              fontSize: isMobile ? '0.75rem' : '0.875rem',
+                              mb: 1
+                            }}
+                          >
                             {formatDate(day.dt)}
                           </Typography>
                           <img 
                             src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`}
                             alt={day.weather[0].description}
-                            style={{ width: 50, height: 50 }}
+                            style={{ 
+                              width: isMobile ? 40 : 50, 
+                              height: isMobile ? 40 : 50 
+                            }}
                           />
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ 
+                              fontSize: isMobile ? '0.7rem' : '0.8rem',
+                              mb: 1
+                            }}
+                          >
                             {day.weather[0].description}
                           </Typography>
-                          <Box display="flex" justifyContent="center" gap={1} mt={1}>
-                            <Typography variant="body2" fontWeight="bold">
+                          <Box display="flex" justifyContent="center" gap={1}>
+                            <Typography 
+                              variant="body2" 
+                              fontWeight="bold"
+                              sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem' }}
+                            >
                               {Math.round(day.main.temp_max)}°
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography 
+                              variant="body2" 
+                              color="text.secondary"
+                              sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem' }}
+                            >
                               {Math.round(day.main.temp_min)}°
                             </Typography>
                           </Box>

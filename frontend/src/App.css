@@ -3,19 +3,62 @@
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-/* Responsiv design */
+/* Responsiv design för olika skärmstorlekar */
 @media (max-width: 600px) {
+  .MuiContainer-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  .MuiTypography-h3 {
+    font-size: 1.8rem !important;
+  }
+  
+  .MuiTypography-h4 {
+    font-size: 1.5rem !important;
+  }
+  
+  .MuiTypography-h5 {
+    font-size: 1.3rem !important;
+  }
+  
+  .MuiTypography-h6 {
+    font-size: 1.1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiContainer-root {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+  
+  .MuiTypography-h3 {
+    font-size: 1.5rem !important;
+  }
+  
+  .MuiTypography-h4 {
+    font-size: 1.3rem !important;
+  }
+  
+  .MuiTypography-h5 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Tablet responsivitet */
+@media (min-width: 601px) and (max-width: 960px) {
   .MuiContainer-root {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
-  
-  .MuiTypography-h3 {
-    font-size: 2rem !important;
-  }
-  
-  .MuiTypography-h4 {
-    font-size: 1.75rem !important;
+}
+
+/* Desktop responsivitet */
+@media (min-width: 961px) {
+  .MuiContainer-root {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
   }
 }
 
@@ -77,4 +120,155 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Mobile-first responsive utilities */
+.mobile-hidden {
+  display: block;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Touch-friendly buttons */
+@media (max-width: 600px) {
+  .MuiButton-root {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  .MuiIconButton-root {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+}
+
+/* Responsive grid spacing */
+@media (max-width: 600px) {
+  .MuiGrid-container {
+    margin: -4px !important;
+  }
+  
+  .MuiGrid-item {
+    padding: 4px !important;
+  }
+}
+
+/* Responsive card padding */
+@media (max-width: 600px) {
+  .MuiCardContent-root {
+    padding: 12px !important;
+  }
+}
+
+/* Responsive search bar */
+@media (max-width: 600px) {
+  .search-container {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .search-container .MuiTextField-root {
+    width: 100% !important;
+  }
+}
+
+/* Responsive weather card layout */
+@media (max-width: 600px) {
+  .weather-card-content {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  .weather-card-main {
+    margin-bottom: 16px !important;
+  }
+  
+  .weather-card-details {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+}
+
+/* Responsive navigation */
+@media (max-width: 600px) {
+  .MuiAppBar-root .MuiToolbar-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  .MuiAppBar-root .MuiTypography-h6 {
+    font-size: 1.1rem !important;
+  }
+  
+  .MuiAppBar-root .MuiButton-root {
+    font-size: 0.875rem !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* Responsive forecast grid */
+@media (max-width: 600px) {
+  .forecast-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .forecast-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Responsive temperature display */
+@media (max-width: 600px) {
+  .temperature-display {
+    font-size: 2.5rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .temperature-display {
+    font-size: 2rem !important;
+  }
+}
+
+/* Responsive weather icon */
+@media (max-width: 600px) {
+  .weather-icon-large {
+    width: 60px !important;
+    height: 60px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .weather-icon-large {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}
+
+/* Responsive chip spacing */
+@media (max-width: 600px) {
+  .weather-chips {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  
+  .MuiChip-root {
+    width: 100% !important;
+    justify-content: center !important;
+  }
 }

@@ -8,7 +8,9 @@ import {
   ListItem, 
   ListItemText,
   Typography,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { Search, MyLocation, History } from '@mui/icons-material';
 import { useWeather } from '../context/WeatherContext';
@@ -17,6 +19,8 @@ const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const { getCurrentWeather, searchHistory, loading } = useWeather();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSearch = async (city = searchTerm) => {
     if (city.trim()) {
@@ -53,13 +57,15 @@ const SearchBar = () => {
       <Paper 
         elevation={3} 
         sx={{ 
-          p: 2, 
+          p: isMobile ? 1.5 : 2, 
           display: 'flex', 
           alignItems: 'center', 
-          gap: 2,
+          gap: isMobile ? 1 : 2,
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white'
+          color: 'white',
+          flexDirection: isMobile ? 'column' : 'row'
         }}
+        className="search-container"
       >
         <TextField
           fullWidth
@@ -84,27 +90,40 @@ const SearchBar = () => {
             },
           }}
         />
-        <Button
-          variant="contained"
-          onClick={() => handleSearch()}
-          disabled={loading || !searchTerm.trim()}
-          startIcon={<Search />}
-          sx={{
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            '&:hover': {
-              backgroundColor: 'rgba(255,255,255,0.3)',
-            },
-          }}
+        <Box 
+          display="flex" 
+          gap={1} 
+          width={isMobile ? '100%' : 'auto'}
+          justifyContent={isMobile ? 'space-between' : 'flex-end'}
         >
-          Sök
-        </Button>
-        <IconButton
-          onClick={getCurrentLocation}
-          sx={{ color: 'white' }}
-          title="Använd min plats"
-        >
-          <MyLocation />
-        </IconButton>
+          <Button
+            variant="contained"
+            onClick={() => handleSearch()}
+            disabled={loading || !searchTerm.trim()}
+            startIcon={<Search />}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.3)',
+              },
+              flex: isMobile ? 1 : 'none',
+              minHeight: isMobile ? 44 : 'auto'
+            }}
+          >
+            {isMobile ? 'Sök' : 'Sök'}
+          </Button>
+          <IconButton
+            onClick={getCurrentLocation}
+            sx={{ 
+              color: 'white',
+              minHeight: isMobile ? 44 : 'auto',
+              minWidth: isMobile ? 44 : 'auto'
+            }}
+            title="Använd min plats"
+          >
+            <MyLocation />
+          </IconButton>
+        </Box>
       </Paper>
 
       {showHistory && searchHistory.length > 0 && (
@@ -131,7 +150,10 @@ const SearchBar = () => {
                 key={index}
                 button
                 onClick={() => handleSearch(city)}
-                sx={{ '&:hover': { backgroundColor: '#f5f5f5' } }}
+                sx={{ 
+                  '&:hover': { backgroundColor: '#f5f5f5' },
+                  minHeight: isMobile ? 48 : 'auto'
+                }}
               >
                 <ListItemText primary={city} />
               </ListItem>
