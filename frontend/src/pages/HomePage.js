@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
   Container, 
   Typography, 
@@ -14,10 +14,12 @@ import WeatherCard from '../components/WeatherCard';
 
 const HomePage = () => {
   const { currentWeather, loading, error, favorites, getCurrentWeather } = useWeather();
+  const hasLoadedInitial = useRef(false);
 
-  // Ladda Stockholm som standard när sidan laddas
+  // Ladda Stockholm som standard när sidan laddas (endast en gång)
   useEffect(() => {
-    if (!currentWeather) {
+    if (!currentWeather && !hasLoadedInitial.current) {
+      hasLoadedInitial.current = true;
       getCurrentWeather('Stockholm');
     }
   }, [currentWeather, getCurrentWeather]);
