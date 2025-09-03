@@ -1,32 +1,123 @@
 import axios from 'axios';
+import { 
+  validateCityName, 
+  validateCoordinates, 
+  getSecureHeaders, 
+  validateApiResponse,
+  searchRateLimiter 
+} from '../utils/validation';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002/api';
+
+// Create axios instance with security configurations
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000, // 10 seconds timeout
+  headers: getSecureHeaders()
+});
+
+// Request interceptor for security
+apiClient.interceptors.request.use(
+  (config) => {
+    // Add timestamp to prevent caching of sensitive requests
+    config.params = {
+      ...config.params,
+      _t: Date.now()
+    };
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => {
+    return validateApiResponse(response.data);
+  },
+  (error) => {
+    // Handle different types of errors securely
+    if (error.response) {
+      // Server responded with error status
+      const message = error.response.data?.error || 'Serverfel uppstod';
+      throw new Error(message);
+    } else if (error.request) {
+      // Request was made but no response received
+      throw new Error('Kunde inte ansluta till servern');
+    } else {
+      // Something else happened
+      throw new Error('Ett oväntat fel uppstod');
+    }
+  }
+);
 
 const weatherService = {
   async getCurrentWeather(city) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/weather/current/${city}`);
-      return response.data;
+      // Validate input
+      const validation = validateCityName(city);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      // Check rate limit
+      if (!searchRateLimiter.isAllowed('weather-search')) {
+        throw new Error('För många sökningar. Vänta en stund innan du söker igen.');
+      }
+
+      const response = await apiClient.get(`/weather/current/${encodeURIComponent(validation.sanitized)}`);
+      return response;
     } catch (error) {
-      throw new Error(`Kunde inte hämta väderdata för ${city}`);
+      console.error('Weather service error:', error.message);
+      throw error;
     }
   },
 
   async getForecast(city) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/weather/forecast/${city}`);
-      return response.data;
+      // Validate input
+      const validation = validateCityName(city);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      // Check rate limit
+      if (!searchRateLimiter.isAllowed('forecast-search')) {
+        throw new Error('För många prognosförfrågningar. Vänta en stund innan du söker igen.');
+      }
+
+      const response = await apiClient.get(`/weather/forecast/${encodeURIComponent(validation.sanitized)}`);
+      return response;
     } catch (error) {
-      throw new Error(`Kunde inte hämta prognos för ${city}`);
+      console.error('Forecast service error:', error.message);
+      throw error;
     }
   },
 
   async getWeatherByCoords(lat, lon) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/weather/coordinates?lat=${lat}&lon=${lon}`);
-      return response.data;
+      // Validate coordinates
+      const validation = validateCoordinates(lat, lon);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      // Check rate limit
+      if (!searchRateLimiter.isAllowed('coords-search')) {
+        throw new Error('För många koordinatförfrågningar. Vänta en stund innan du söker igen.');
+      }
+
+      const response = await apiClient.get('/weather/coordinates', {
+        params: {
+          lat: validation.coordinates.lat,
+          lon: validation.coordinates.lon
+        }
+      });
+      return response;
     } catch (error) {
-      throw new Error('Kunde inte hämta väderdata för din position');
+      console.error('Coordinates weather service error:', error.message);
+      throw error;
     }
   }
 };

@@ -9,24 +9,45 @@ import {
   ListItemText,
   Typography,
   IconButton,
+  Alert,
   useMediaQuery,
   useTheme
 } from '@mui/material';
 import { Search, MyLocation, History } from '@mui/icons-material';
 import { useWeather } from '../context/WeatherContext';
+import { validateSearchInput } from '../utils/validation';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [validationError, setValidationError] = useState('');
   const { getCurrentWeather, searchHistory, loading } = useWeather();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSearch = async (city = searchTerm) => {
-    if (city.trim()) {
-      await getCurrentWeather(city.trim());
+    try {
+      // Clear previous validation errors
+      setValidationError('');
+      
+      if (!city.trim()) {
+        setValidationError('Ange ett stadsnamn');
+        return;
+      }
+
+      // Validate input
+      const validation = validateSearchInput(city);
+      if (!validation.isValid) {
+        setValidationError(validation.errors.join(', '));
+        return;
+      }
+
+      // Use sanitized input
+      await getCurrentWeather(validation.sanitized);
       setSearchTerm('');
       setShowHistory(false);
+    } catch (error) {
+      setValidationError(error.message);
     }
   };
 
@@ -36,14 +57,28 @@ const SearchBar = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError('');
+    }
+  };
+
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          const { latitude, longitude } = position.coords;
-          // Här skulle vi anropa en API för att få stad baserat på koordinater
-          // För nu använder vi en placeholder
-          console.log('Position:', latitude, longitude);
+          try {
+            const { latitude, longitude } = position.coords;
+            // Here we would call an API to get city based on coordinates
+            // For now we use a placeholder
+            console.log('Position:', latitude, longitude);
+          } catch (error) {
+            console.error('Error getting location:', error);
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -72,14 +107,19 @@ const SearchBar = () => {
           variant="outlined"
           placeholder="Sök efter stad..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           onFocus={() => setShowHistory(true)}
+          error={!!validationError}
+          helperText={validationError}
+          inputProps={{
+            maxLength: 50 // Limit input length
+          }}
           sx={{
             '& .MuiOutlinedInput-root': {
               backgroundColor: 'white',
               '& fieldset': {
-                borderColor: 'transparent',
+                borderColor: validationError ? 'red' : 'transparent',
               },
               '&:hover fieldset': {
                 borderColor: 'rgba(255,255,255,0.3)',
@@ -88,6 +128,13 @@ const SearchBar = () => {
                 borderColor: 'white',
               },
             },
+            '& .MuiFormHelperText-root': {
+              color: 'white',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              marginTop: '4px'
+            }
           }}
         />
         <Box 
