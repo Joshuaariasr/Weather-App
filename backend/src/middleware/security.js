@@ -1,7 +1,7 @@
 const rateLimit = require('express-rate-limit');
 const { body, param, query, validationResult } = require('express-validator');
 
-// Rate limiting för att förhindra spam och DoS-attacker
+// Rate limiting för att förhindra spam och DoS-attacker - MINSKAD för utveckling
 const createRateLimit = (windowMs, max, message) => {
   return rateLimit({
     windowMs,
@@ -21,17 +21,17 @@ const createRateLimit = (windowMs, max, message) => {
   });
 };
 
-// Allmän rate limit
+// Allmän rate limit - MINSKAD för utveckling
 const generalRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minuter
-  100, // max 100 requests per IP
+  1000, // max 1000 requests per IP (höjd för utveckling)
   'För många förfrågningar från denna IP, försök igen senare'
 );
 
-// Striktare rate limit för väder-API
+// Striktare rate limit för väder-API - MINSKAD för utveckling
 const weatherRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minuter
-  30, // max 30 väderförfrågningar per IP
+  100, // max 100 väderförfrågningar per IP (höjd för utveckling)
   'För många väderförfrågningar, försök igen senare'
 );
 

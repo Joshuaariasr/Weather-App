@@ -3,23 +3,19 @@ import {
   Container, 
   Typography, 
   Box, 
-  Grid, 
   Alert,
   CircularProgress,
   Button,
-  Paper,
-  useMediaQuery,
-  useTheme
+  Paper
 } from '@mui/material';
 import { useWeather } from '../context/WeatherContext';
 import WeatherCard from '../components/WeatherCard';
+import { weatherService } from '../services/weatherService';
 
 const FavoritesPage = () => {
-  const { favorites, getCurrentWeather, loading } = useWeather();
+  const { favorites } = useWeather();
   const [favoriteWeathers, setFavoriteWeathers] = useState([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (favorites.length > 0) {
@@ -30,9 +26,20 @@ const FavoritesPage = () => {
   const loadFavoriteWeathers = async () => {
     setLoadingFavorites(true);
     try {
-      const weatherPromises = favorites.map(city => getCurrentWeather(city));
+      const weatherPromises = favorites.map(async (city) => {
+        try {
+          const response = await weatherService.getCurrentWeather(city);
+          return response;
+        } catch (error) {
+          console.error(`Error loading weather for ${city}:`, error);
+          return null;
+        }
+      });
+      
       const weathers = await Promise.all(weatherPromises);
-      setFavoriteWeathers(weathers);
+      // Filtrera bort null-värden (fel)
+      const validWeathers = weathers.filter(weather => weather !== null);
+      setFavoriteWeathers(validWeathers);
     } catch (error) {
       console.error('Error loading favorite weathers:', error);
     } finally {
@@ -42,51 +49,22 @@ const FavoritesPage = () => {
 
   if (favorites.length === 0) {
     return (
-      <Container 
-        maxWidth="lg" 
-        sx={{ 
-          py: isMobile ? 2 : 4,
-          px: isMobile ? 1 : 3
-        }}
-      >
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box textAlign="center">
-          <Typography 
-            variant={isMobile ? "h5" : "h4"} 
-            gutterBottom
-            sx={{
-              fontSize: isMobile ? '1.5rem' : '2rem'
-            }}
-          >
+          <Typography variant="h4" gutterBottom>
             Dina favoriter
           </Typography>
-          <Paper elevation={3} sx={{ p: isMobile ? 2 : 4, mt: 4 }}>
-            <Typography 
-              variant={isMobile ? "h6" : "h6"} 
-              color="text.secondary" 
-              gutterBottom
-              sx={{
-                fontSize: isMobile ? '1.1rem' : '1.25rem'
-              }}
-            >
+          <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
               Du har inga favoritstäder än
             </Typography>
-            <Typography 
-              variant={isMobile ? "body2" : "body1"} 
-              color="text.secondary" 
-              sx={{ 
-                mb: 3,
-                fontSize: isMobile ? '0.9rem' : '1rem'
-              }}
-            >
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
               Lägg till städer som favoriter genom att klicka på hjärtat när du söker efter väder.
             </Typography>
             <Button 
               variant="contained" 
               onClick={() => window.location.href = '/'}
-              size={isMobile ? "medium" : "large"}
-              sx={{
-                minHeight: isMobile ? 44 : 'auto'
-              }}
+              size="large"
             >
               Gå till startsidan
             </Button>
@@ -97,32 +75,12 @@ const FavoritesPage = () => {
   }
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
-        py: isMobile ? 2 : 4,
-        px: isMobile ? 1 : 3
-      }}
-    >
-      <Box mb={isMobile ? 2 : 4}>
-        <Typography 
-          variant={isMobile ? "h5" : "h4"} 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 'bold',
-            fontSize: isMobile ? '1.5rem' : '2rem'
-          }}
-        >
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
           Dina favoritstäder
         </Typography>
-        <Typography 
-          variant={isMobile ? "body1" : "subtitle1"} 
-          color="text.secondary"
-          sx={{
-            fontSize: isMobile ? '0.9rem' : '1rem'
-          }}
-        >
+        <Typography variant="subtitle1" color="text.secondary">
           {favorites.length} stad{favorites.length !== 1 ? 'er' : ''} sparade
         </Typography>
       </Box>
@@ -133,31 +91,22 @@ const FavoritesPage = () => {
         </Box>
       )}
 
-      <Grid 
-        container 
-        spacing={isMobile ? 1 : 3}
-        sx={{
-          margin: isMobile ? '-4px' : 'auto'
+      {/* Använd Box istället för Grid för att undvika varningar */}
+      <Box 
+        sx={{ 
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gap: 3
         }}
       >
         {favoriteWeathers.map((weather, index) => (
-          <Grid 
-            item 
-            xs={12} 
-            sm={6} 
-            md={4} 
+          <WeatherCard 
             key={index}
-            sx={{
-              padding: isMobile ? '4px' : '12px'
-            }}
-          >
-            <WeatherCard 
-              weather={weather} 
-              isFavorite={true}
-            />
-          </Grid>
+            weather={weather} 
+            isFavorite={true}
+          />
         ))}
-      </Grid>
+      </Box>
 
       {favoriteWeathers.length === 0 && !loadingFavorites && (
         <Alert severity="info" sx={{ mt: 3 }}>
