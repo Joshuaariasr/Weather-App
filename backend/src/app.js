@@ -31,14 +31,21 @@ app.use(helmet({
 // Rate limiting
 app.use(generalRateLimit);
 
-// CORS configuration
+// CORS configuration - FIXED
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] // Ersätt med din produktionsdomän
     : ['http://localhost:3000'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']
 }));
 
 // Logging
@@ -68,6 +75,7 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server körs på port ${PORT}`);
   console.log(`Säkerhetsläge: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS aktiverat för: http://localhost:3000`);
 });
 
 module.exports = app;

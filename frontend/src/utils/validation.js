@@ -125,11 +125,11 @@ class RateLimiter {
 // Create rate limiter instance
 export const searchRateLimiter = new RateLimiter(5, 60000); // 5 requests per minute
 
-// Security headers for API requests
+// Security headers for API requests - FIXED
 export const getSecureHeaders = () => {
   return {
     'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
+    'Accept': 'application/json'
   };
 };
 
